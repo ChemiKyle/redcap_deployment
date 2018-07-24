@@ -4,6 +4,13 @@ import re
 import utility
 
 @task
+def get_latest_release_tag(module_name):
+    url = "https://api.github.com/repos/ctsit/'%s'/releases/latest" %module_name
+    tag_name = run("curl -s '%s' | grep tag_name | cut -d '\"' -f 4" %(url))
+
+    return tag_name
+
+@task
 def enable(module_name, module_version="", pid=""):
     """
     Enables a REDCap module.
