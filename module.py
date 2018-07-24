@@ -3,10 +3,21 @@ import os
 import re
 import utility
 
-@task
-def get_latest_release_tag(module_name):
+def get_latest_release_tag(module_name, repo_base="ctsit"):
     url = "https://api.github.com/repos/ctsit/'%s'/releases/latest" %module_name
+
+    # Check the module exists
+    if(run("curl -s '%s' | grep message | cut -d '\"' -f 4" %(url))
+        == 'Not Found'):
+        print("The module %s/%s doesn't exist." %(repo_base, module_name))
+        return ""
+
     tag_name = run("curl -s '%s' | grep tag_name | cut -d '\"' -f 4" %(url))
+
+    # Check the tag name has the structure 4.1.2
+    if(re.search(r"(\d+.\d+.\d+)", tag_name)):
+        print("The tag for module %s/%s is not valid." %(repo_base, module_name))
+        return ""
 
     return tag_name
 
