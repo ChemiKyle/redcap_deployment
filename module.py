@@ -3,21 +3,26 @@ import os
 import re
 import utility
 
+def module_exists(module_name, repo_base="ctsit"):
+    url = "https://api.github.com/repos/ctsit/'%s'/releases/latest" %module_name
+    output = run("curl -s '%s' | grep message | cut -d '\"' -f 4" %(url)) != 'Not Found'
+    if(not output): print("The module '%s'/'%s' doesn't exist." %(repo_base, module_name))
+    return output
+
+
 def get_latest_release_tag(module_name, repo_base="ctsit"):
     url = "https://api.github.com/repos/'%s'/'%s'/releases/latest" %(repo_base, module_name)
 
+    tag_name = ""
+
     # Check the module exists
-    if(run("curl -s '%s' | grep message | cut -d '\"' -f 4" %(url))
-        == 'Not Found'):
-        print("The module %s/%s doesn't exist." %(repo_base, module_name))
-        return ""
+    if(module_exists(module_name, repo_base)):
+        tag_name = run("curl -s '%s' | grep tag_name | cut -d '\"' -f 4" %(url))
 
-    tag_name = run("curl -s '%s' | grep tag_name | cut -d '\"' -f 4" %(url))
-
-    # Check the tag name has the structure 4.1.2
-    if(re.search(r"(\d+.\d+.\d+)", tag_name)):
-        print("The tag for module %s/%s is not valid." %(repo_base, module_name))
-        return ""
+        # Check the tag name has the structure 4.1.2
+        if(re.search(r"(\d+.\d+.\d+)", tag_name)):
+            print("The tag for module %s/%s is not valid." %(repo_base, module_name))
+            tag_name = ""
 
     return tag_name
 
