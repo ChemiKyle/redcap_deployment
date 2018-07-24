@@ -4,7 +4,7 @@ import re
 import utility
 
 def get_latest_release_tag(module_name, repo_base="ctsit"):
-    url = "https://api.github.com/repos/ctsit/'%s'/releases/latest" %module_name
+    url = "https://api.github.com/repos/'%s'/'%s'/releases/latest" %(repo_base, module_name)
 
     # Check the module exists
     if(run("curl -s '%s' | grep message | cut -d '\"' -f 4" %(url))
@@ -20,6 +20,7 @@ def get_latest_release_tag(module_name, repo_base="ctsit"):
         return ""
 
     return tag_name
+
 
 @task
 def enable(module_name, module_version="", pid=""):
