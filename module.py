@@ -4,9 +4,9 @@ import re
 import utility
 
 def module_exists(module_name, repo_base="ctsit"):
-    url = "https://api.github.com/repos/ctsit/'%s'/releases/latest" %module_name
-    output = run("curl -s '%s' | grep message | cut -d '\"' -f 4" %(url)) != 'Not Found'
-    if(not output): print("The module '%s'/'%s' doesn't exist." %(repo_base, module_name))
+    url = "https://api.github.com/repos/%s/%s" %(repo_base, module_name)
+    output = run("curl -s %s | grep message | cut -d '\"' -f 4" %(url)) != 'Not Found'
+    if(not output): print("The module %s/%s doesn't exist." %(repo_base, module_name))
     return output
 
 
