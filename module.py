@@ -2,6 +2,7 @@ from fabric.api import *
 import os
 import re
 import utility
+import urllib2
 
 def module_exists(module_name, repo_base="ctsit"):
     url = "https://api.github.com/repos/%s/%s" %(repo_base, module_name)
@@ -24,6 +25,25 @@ def get_latest_release_tag(module_name, repo_base="ctsit"):
             print("The module %s/%s has not been released yet." %(repo_base, module_name))
 
     return tag
+
+def get_latest_release_zip(module_name, repo_base="ctsit"):
+    if(module_exists(module_name, repo_base)):
+        tag = get_latest_release_tag(module_name, repo_base)
+        if(tag == ""): # The module hasn't been released. Aborting.
+            abort("The module %s/%s has not been released yet." %(repo_base, module_name))
+
+        script = "curl -s https://api.github.com/repos/%s/%s/releases/latest | grep zipball_url | cut -d '\"' -f 4" %(repo_base, module_name)
+        download_url = run(script)
+        zip_file = urllib2.urlopen(download_url)
+
+        file_name = "%s_%s_%s.zip" %(repo_base, module_name, tag)
+        output = open(file_name, "w")
+        output.write(zip_file.read())
+        output.close()
+
+        return file_name
+    else:
+        abort("The module %s/%s doesn't exist." %(repo_base, module_name))
 
 
 @task
