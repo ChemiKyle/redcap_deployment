@@ -10,20 +10,18 @@ def module_exists(module_name, repo_base="ctsit"):
     if(not output): print("The module %s/%s doesn't exist." %(repo_base, module_name))
     return output
 
-
 def get_latest_release_tag(module_name, repo_base="ctsit"):
     tag = ""
 
     # Check the module exists
     if(module_exists(module_name, repo_base)):
+        url = "https://api.github.com/repos/%s/%s/tags" %(repo_base, module_name)
 
-        url = "https://api.github.com/repos/%s/%s/releases/latest" %(repo_base, module_name)
-
-        tag = run("curl -s '%s' | grep tag_name | cut -d '\"' -f 4" %(url))
+        tags = run("curl -s %s | grep name | cut -d '\"' -f 4 | sort --version-sort -r" %(url))
+        tag = tags.split('\n')[0]
 
         if(tag == ""):
-            print("The module %s/%s has not been released yet." %(repo_base, module_name))
-
+            print("The module %s/%s hasn't been tagged." %(repo_base, module_name))
     return tag
 
 def get_latest_release_zip(module_name, repo_base="ctsit"):
@@ -44,7 +42,6 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
         return file_name
     else:
         abort("The module %s/%s doesn't exist." %(repo_base, module_name))
-
 
 @task
 def enable(module_name, module_version="", pid=""):
