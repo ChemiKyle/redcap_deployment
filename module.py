@@ -2,7 +2,7 @@ from fabric.api import *
 import os
 import re
 import utility
-from urllib.request import urlopen
+import urllib.request
 
 @task
 def module_exists(module_name, repo_base="ctsit"):
@@ -39,10 +39,11 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
         if(tag == ""): # The module hasn't been released. Aborting.
             abort("The module %s/%s has not been released yet." %(repo_base, module_name))
 
-        script = "curl -L -s https://github.com/%s/%s/archive/%s.zip -O" %(repo_base, module_name, tag)
-        local(script)
+        url = "https://github.com/%s/%s/archive/%s.zip" %(repo_base, module_name, tag)
+        file_name = "%s_%s.zip" %(module_name, tag)
+        urllib.request.urlretrieve(url, file_name)
 
-        return tag
+        return file_name
     else:
         abort("The module %s/%s doesn't exist." %(repo_base, module_name))
 
