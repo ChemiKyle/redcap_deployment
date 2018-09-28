@@ -29,7 +29,7 @@ def get_latest_release_tag(module_name, repo_base="ctsit"):
         if(tag == ""):
             print("The module %s/%s hasn't been tagged." %(repo_base, module_name))
         else:
-            print(" The tag for module %s/%s is %s." %(repo_base, module_name, tag))
+            print("The tag for module %s/%s is %s." %(repo_base, module_name, tag))
     return tag
 
 @task
@@ -39,16 +39,10 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
         if(tag == ""): # The module hasn't been released. Aborting.
             abort("The module %s/%s has not been released yet." %(repo_base, module_name))
 
-        script = "curl -s https://api.github.com/repos/%s/%s/releases/latest | grep zipball_url | cut -d '\"' -f 4" %(repo_base, module_name)
-        download_url = run(script)
-        zip_file = urlopen(download_url)
+        script = "curl -L -s https://github.com/%s/%s/archive/%s.zip -O" %(repo_base, module_name, tag)
+        local(script)
 
-        file_name = "%s_%s_%s.zip" %(repo_base, module_name, tag)
-        output = open(file_name, "w")
-        output.write(zip_file.read())
-        output.close()
-
-        return file_name
+        return tag
     else:
         abort("The module %s/%s doesn't exist." %(repo_base, module_name))
 
