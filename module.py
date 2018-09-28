@@ -40,7 +40,7 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
             abort("The module %s/%s has not been released yet." %(repo_base, module_name))
 
         url = "https://github.com/%s/%s/archive/%s.zip" %(repo_base, module_name, tag)
-        file_name = "%s_%s.zip" %(module_name, tag)
+        file_name = "%s_v%s.zip" %(module_name, tag)
         urllib.request.urlretrieve(url, file_name)
 
         return file_name
