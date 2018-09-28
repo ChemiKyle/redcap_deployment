@@ -24,6 +24,7 @@ def get_latest_release_tag(module_name, repo_base="ctsit"):
         with hide('output', 'running', 'warnings'):
             tags = run("curl -s %s | grep name | cut -d '\"' -f 4 | sort --version-sort -r" %(url))
         tag = tags.split('\n')[0]
+        tag = tag.rstrip()
 
         if(tag == ""):
             print("The module %s/%s hasn't been tagged." %(repo_base, module_name))
