@@ -2,7 +2,7 @@ from fabric.api import *
 import os
 import re
 import utility
-#import urllib2
+from urllib.request import urlopen
 
 @task
 def module_exists(module_name, repo_base="ctsit"):
@@ -40,7 +40,7 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
 
         script = "curl -s https://api.github.com/repos/%s/%s/releases/latest | grep zipball_url | cut -d '\"' -f 4" %(repo_base, module_name)
         download_url = run(script)
-        zip_file = urllib2.urlopen(download_url)
+        zip_file = urlopen(download_url)
 
         file_name = "%s_%s_%s.zip" %(repo_base, module_name, tag)
         output = open(file_name, "w")
