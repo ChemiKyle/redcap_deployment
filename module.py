@@ -2,14 +2,18 @@ from fabric.api import *
 import os
 import re
 import utility
-import urllib2
+#import urllib2
 
+@task
 def module_exists(module_name, repo_base="ctsit"):
     url = "https://api.github.com/repos/%s/%s" %(repo_base, module_name)
-    output = run("curl -s %s | grep message | cut -d '\"' -f 4" %(url)) != 'Not Found'
+    with hide('output', 'running', 'warnings'):
+        output = run("curl -s %s | grep message | cut -d '\"' -f 4" %(url)) != 'Not Found'
     if(not output): print("The module %s/%s doesn't exist." %(repo_base, module_name))
+    else: print("The module %s/%s does exist." %(repo_base, module_name))
     return output
 
+@task
 def get_latest_release_tag(module_name, repo_base="ctsit"):
     tag = ""
 
@@ -17,13 +21,17 @@ def get_latest_release_tag(module_name, repo_base="ctsit"):
     if(module_exists(module_name, repo_base)):
         url = "https://api.github.com/repos/%s/%s/tags" %(repo_base, module_name)
 
-        tags = run("curl -s %s | grep name | cut -d '\"' -f 4 | sort --version-sort -r" %(url))
+        with hide('output', 'running', 'warnings'):
+            tags = run("curl -s %s | grep name | cut -d '\"' -f 4 | sort --version-sort -r" %(url))
         tag = tags.split('\n')[0]
 
         if(tag == ""):
             print("The module %s/%s hasn't been tagged." %(repo_base, module_name))
+        else:
+            print(" The tag for module %s/%s is %s." %(repo_base, module_name, tag))
     return tag
 
+@task
 def get_latest_release_zip(module_name, repo_base="ctsit"):
     if(module_exists(module_name, repo_base)):
         tag = get_latest_release_tag(module_name, repo_base)
