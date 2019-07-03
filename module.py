@@ -2,6 +2,7 @@ from fabric.api import *
 import os
 import re
 import utility
+import json
 import urllib.request
 
 def module_exists(module_name, repo_base="ctsit"):
@@ -12,10 +13,14 @@ def module_exists(module_name, repo_base="ctsit"):
     else: print("The module %s/%s does exist." %(repo_base, module_name))
     return output
 
+def get_all_release_tags(module_name, repo_base="ctsit"):
+    url = "https://api.github.com/repos/%s/%s/tags" %(repo_base, module_name)
+
+    response = urllib.request.urlopen(url).read()
+    # TODO: refactor data structure to set tag value as key for each dict
+    return json.loads(response)
+
 def get_latest_release_tag(module_name, repo_base="ctsit"):
-    """
-    Defaults to latest release
-    """
     tag = ""
 
     url = "https://api.github.com/repos/%s/%s/tags" %(repo_base, module_name)
@@ -31,22 +36,30 @@ def get_latest_release_tag(module_name, repo_base="ctsit"):
         print("The tag for module %s/%s is %s." %(repo_base, module_name, tag))
     return tag
 
-def get_latest_release_zip(module_name, repo_base="ctsit"):
+def get_release_zip(module_name, repo_base="ctsit", tag="", upload_module_version=""):
+    """
+    Create a zip file of a specified release, defaulting to the latest
+    """
     if(module_exists(module_name, repo_base)):
-        tag = get_latest_release_tag(module_name, repo_base)
+        if (tag == ""):
+            tag = get_latest_release_tag(module_name, repo_base)
+
         if(tag == ""): # The module hasn't been released. Aborting.
             abort("The module %s/%s has not been released yet." %(repo_base, module_name))
 
+        if upload_module_version == "":
+            upload_module_version = tag
+
         url = "https://github.com/%s/%s/archive/%s.zip" %(repo_base, module_name, tag)
-        file_name = "%s_v%s" %(module_name, re.sub('[^\d^\.]', '', tag)) # regex replace anything in tag except x.y.z
-        urllib.request.urlretrieve(url, file_name + '.zip')
+        file_name = "%s_v%s" %(module_name, re.sub('[^\d^\.]', '', upload_module_version)) # regex replace anything in tag except x.y.z
+        urllib.request.urlretrieve(url, file_name + '.zip') # TODO: remove this file upon completion or store in a temp dir
 
         return file_name
     else:
         abort("The module %s/%s doesn't exist." %(repo_base, module_name))
 
 @task
-def deploy_module(module_input, module_version="", upload_module_version = ""):
+def deploy_module(module_input, remote_module_version_tag="", upload_module_version = ""):
     """
     Deploy module to the specified host without enabling it.
     If no module_version is provided the latest version is deployed.
@@ -59,7 +72,7 @@ def deploy_module(module_input, module_version="", upload_module_version = ""):
         module_name = module_input
         repo_base = "ctsit"
 
-    file_name = get_latest_release_zip(module_name, repo_base)
+    file_name = get_release_zip(module_name, repo_base, remote_module_version_tag, upload_module_version)
 
     with settings(user=env.deploy_user):
     # Make a temp folder to upload the tar to
