@@ -1,6 +1,7 @@
 from fabric.api import *
 import os
 import re
+import utility
 import urllib.request
 
 def module_exists(module_name, repo_base="ctsit"):
@@ -14,19 +15,17 @@ def module_exists(module_name, repo_base="ctsit"):
 def get_latest_release_tag(module_name, repo_base="ctsit"):
     tag = ""
 
-    # Check the module exists
-    if(module_exists(module_name, repo_base)):
-        url = "https://api.github.com/repos/%s/%s/tags" %(repo_base, module_name)
+    url = "https://api.github.com/repos/%s/%s/tags" %(repo_base, module_name)
 
-        with hide('output', 'running', 'warnings'):
-            tags = run("curl -s %s | grep name | cut -d '\"' -f 4 | sort --version-sort -r" %(url))
+    with hide('output', 'running', 'warnings'):
+        tags = run("curl -s %s | grep name | cut -d '\"' -f 4 | sort --version-sort -r" %(url))
         tag = tags.split('\n')[0]
         tag = tag.rstrip()
 
-        if(tag == ""):
-            print("The module %s/%s hasn't been tagged." %(repo_base, module_name))
-        else:
-            print("The tag for module %s/%s is %s." %(repo_base, module_name, tag))
+    if(tag == ""):
+        print("The module %s/%s hasn't been tagged." %(repo_base, module_name))
+    else:
+        print("The tag for module %s/%s is %s." %(repo_base, module_name, tag))
     return tag
 
 def get_latest_release_zip(module_name, repo_base="ctsit"):
@@ -44,11 +43,17 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
         abort("The module %s/%s doesn't exist." %(repo_base, module_name))
 
 @task
-def deploy_module(module_name, module_version="", repo_base="ctsit"):
+def deploy_module(module_input, module_version="", repo_base="ctsit"):
     """
     Deploy module to the specified host without enabling it.
     If no module_version is provided the latest version is deployed.
     """
+
+    module_array = module_input.split('/')
+    if (len(module_array) == 2):
+        repo_base, module_name = module_array
+    else:
+        module_name = module_input
 
     file_name = get_latest_release_zip(module_name, repo_base)
     #file_name = "project_ownership_v1.2.1"
