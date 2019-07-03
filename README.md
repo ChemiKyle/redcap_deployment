@@ -58,13 +58,10 @@ Vagrant will need a few plugins for this VM. On any platform, run these commands
 ```bash
 vagrant plugin install vagrant-hostsupdater
 vagrant plugin install vagrant-env
+vagrant plugin install vagrant-vbguest
 ```
 
-Mac OSX users might enjoy the functionality of the vagrant-triggers plugin.  CTS-IT uses it to open the Chrome browser to the root of the web site. Run this command at a shell to install it.
-
-    vagrant plugin install vagrant-triggers
-
-For more details about Vagrant software you can go to [why-vagrant](https://docs.vagrantup.com/v2/why-vagrant/) page.
+For more details about Vagrant software you can go to [why-vagrant](https://www.vagrantup.com/intro/index.html#why-vagrant-) page.
 
 ### Install REDCap Modules
 REDCap Deployment supports [REDCap Modules](https://github.com/vanderbilt/redcap-external-modules). In order to deploy external modules, you need to set up `settings/modules.json` file and reference it in your instance's settings.
@@ -95,10 +92,14 @@ You must provide a copy of the REDCap software from <https://projectredcap.org/>
 ## Configure the Virtual Machine
 
 The development environment needs to be configured before it can be started.
-Copy the file _example.env.txt_ to the name _.env_ and customize it for your
+Copy the file `example.env.txt` to the name `.env` and customize it for your
 use. Minimally, you will need to set _smtp\_smarthost_ to the dns name of a mail
 server your development host can use to deliver mail.  This will allow you to
 better test features that send email.
+
+```bash
+cp example.env.txt .env
+```
 
 
 ## Using the testing and development environment
@@ -111,7 +112,7 @@ vagrant up
 
 The vagrant-hostsupdater plugin will make modifications to your hosts file as the VM starts.  If it prompts you for a password, provide the password you use to login to your computer.
 
-After about two minutes, the VM should be accessible at the value of the variable _URL\_OF\_DEPLOYED\_APP_ set in _.env_  By default this is [http://redcap.test/redcap/](http://redcap.test/redcap/)
+After about two minutes, the VM should be accessible at the value of the variable `URL_OF_DEPLOYED_APP` set in `.env`. By default this is [http://redcap.test/redcap/](http://redcap.test/redcap/)
 
 
 ## (Re)deploying REDCap with Fabric Tools
@@ -124,10 +125,7 @@ The Fabric tools require a few python libraries that might not be installed on y
 
 ```bash
 pip3 install fabric3
-pip3 install pycurl
 ```
-
-On Mac OSX, issues with PyCurl can be addressed with the procedures described at [Installing PycURL on macOS High Sierra](https://cscheng.info/2018/01/26/installing-pycurl-on-macos-high-sierra.html)
 
 
 ### Configure Fabric for the Virtual Machine
@@ -169,6 +167,7 @@ If the tests fail and the server is left offline, you can put it back online wit
 ```bash
 fab vagrant online
 ```
+
 
 ## Language Configuration
 

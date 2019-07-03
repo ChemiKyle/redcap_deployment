@@ -32,7 +32,7 @@ function install_prereqs() {
     log "Executing ${FUNCNAME[0]}"
     REQUIRED_PARAMETER_COUNT=2
     if [ $# != $REQUIRED_PARAMETER_COUNT ]; then
-        echo "${FUNCNAME[0]} Installs and configures MySQL, Apache and php7"
+        echo "${FUNCNAME[0]} Installs and configures MySQL, Apache and php7.2"
         echo "${FUNCNAME[0]} requires these $REQUIRED_PARAMETER_COUNT parameters in this order:"
         echo "MYSQL_REPO           The MySQL Repo to install from.  E.g., mysql-5.6"
         echo "DATABASE_ROOT_PASS   Password of the MySQL root user."
@@ -42,20 +42,21 @@ function install_prereqs() {
         DATABASE_ROOT_PASS=$2
     fi
 
+    apt-get install -y dirmngr --install-recommends
 
     # Try two different keyservers to get the MySQL repository key
     gpg --keyserver pgp.mit.edu --recv-keys 5072E1F5 || gpg --keyserver sks-keyservers.net --recv-keys 5072E1F5
     gpg -a --export 5072E1F5 | apt-key add -
 
 cat << END > /etc/apt/sources.list.d/mysql.list
-deb http://repo.mysql.com/apt//debian/ jessie $MYSQL_REPO
-deb-src http://repo.mysql.com/apt//debian/ jessie $MYSQL_REPO
+deb http://repo.mysql.com/apt/debian/ stretch $MYSQL_REPO
+deb-src http://repo.mysql.com/apt/debian/ stretch $MYSQL_REPO
 END
 
-    log "Adding php7 repo to prepare for installation..."
-    echo 'deb http://packages.dotdeb.org jessie all' >> /etc/apt/sources.list
-    echo 'deb-src http://packages.dotdeb.org jessie all' >> /etc/apt/sources.list
-    wget --no-check-certificate -q -O - https://www.dotdeb.org/dotdeb.gpg | apt-key add -
+    log "Adding php7.2 repo to prepare for installation..."
+    sudo apt-get install -y apt-transport-https lsb-release ca-certificates
+    sudo wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+    echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
 
     apt-get update
 
@@ -70,10 +71,10 @@ END
     apt-get install -y apache2
     apt-get install -y mysql-community-server
 
-    log "Installing php7 and required dependencies..."
-    apt-get -y install php7.0
-    apt-get -y install php7.0-xml php7.0-zip
-    apt-get -y install libapache2-mod-php7.0 php7.0-mysql php7.0-curl php7.0-json php7.0-gd php7.0-mbstring php7.0-soap
+    log "Installing php7.2 and required dependencies..."
+    apt-get -y install php7.2
+    apt-get -y install php7.2-xml php7.2-zip
+    apt-get -y install libapache2-mod-php7.2 php7.2-mysql php7.2-curl php7.2-json php7.2-gd php7.2-mbstring php7.2-soap php7.2-dom
     service apache2 restart
 
     # Configure mysqld to be more permissive
@@ -90,10 +91,11 @@ END
     update-rc.d mysql defaults
 
     # Increase the default upload size limit to allow ginormous files
-    sed -i 's/upload_max_filesize =.*/upload_max_filesize = 32M/' /etc/php/7.0/apache2/php.ini
-    sed -i 's/post_max_size =.*/post_max_size = 32M/' /etc/php/7.0/apache2/php.ini
-    sed -i 's/;date.timezone =.*/date.timezone = America\/New_York/' /etc/php/7.0/apache2/php.ini
-    sed -i 's/;date.timezone =.*/date.timezone = America\/New_York/' /etc/php/7.0/cli/php.ini
+    sed -i 's/upload_max_filesize =.*/upload_max_filesize = 32M/' /etc/php/7.2/apache2/php.ini
+    sed -i 's/post_max_size =.*/post_max_size = 32M/' /etc/php/7.2/apache2/php.ini
+    sed -i 's/; max_input_vars =.*/max_input_vars = 10000/' /etc/php/7.2/apache2/php.ini
+    sed -i 's/;date.timezone =.*/date.timezone = America\/New_York/' /etc/php/7.2/apache2/php.ini
+    sed -i 's/;date.timezone =.*/date.timezone = America\/New_York/' /etc/php/7.2/cli/php.ini
 
     log "Stop apache..."
     service apache2 stop
@@ -316,7 +318,7 @@ function create_tables() {
 function install_xdebug() {
     # Install XDebug for enabling code coverage
     log "Executing: install_xdebug()"
-    apt-get install php7.0-xdebug
+    apt-get install -y php7.2-xdebug
 
     echo 'Restarting apache server'
     service apache2 restart
@@ -385,7 +387,8 @@ function reset_db {
 }
 
 function configure_exim4() {
-    echo "Configuring exim4..."
+    echo "Installing and configuring exim4..."
+    apt-get install -y exim4
 cat << EOF > /etc/exim4/update-exim4.conf.conf
 dc_eximconfig_configtype='satellite'
 dc_other_hostnames='localhost'
@@ -428,8 +431,8 @@ service exim4 restart
 
 function configure_php_mail() {
     echo "Configuring php mail..."
-    sed -e "sX.*sendmail_path.*Xsendmail_path = /usr/sbin/sendmail -t -iX;" -i /etc/php/7.0/apache2/php.ini
-    sed -e "sX.*mail.log.*Xmail.log = syslogX;" -i /etc/php/7.0/apache2/php.ini
+    sed -e "sX.*sendmail_path.*Xsendmail_path = /usr/sbin/sendmail -t -iX;" -i /etc/php/7.2/apache2/php.ini
+    sed -e "sX.*mail.log.*Xmail.log = syslogX;" -i /etc/php/7.2/apache2/php.ini
 }
 
 function install_pdftk() {
