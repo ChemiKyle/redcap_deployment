@@ -13,6 +13,9 @@ def module_exists(module_name, repo_base="ctsit"):
     return output
 
 def get_latest_release_tag(module_name, repo_base="ctsit"):
+    """
+    Defaults to latest release
+    """
     tag = ""
 
     url = "https://api.github.com/repos/%s/%s/tags" %(repo_base, module_name)
@@ -35,7 +38,7 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
             abort("The module %s/%s has not been released yet." %(repo_base, module_name))
 
         url = "https://github.com/%s/%s/archive/%s.zip" %(repo_base, module_name, tag)
-        file_name = "%s_v%s" %(module_name, tag)
+        file_name = "%s_v%s" %(module_name, re.sub('[^\d^\.]', '', tag)) # regex replace anything in tag except x.y.z
         urllib.request.urlretrieve(url, file_name + '.zip')
 
         return file_name
@@ -43,20 +46,20 @@ def get_latest_release_zip(module_name, repo_base="ctsit"):
         abort("The module %s/%s doesn't exist." %(repo_base, module_name))
 
 @task
-def deploy_module(module_input, module_version="", repo_base="ctsit"):
+def deploy_module(module_input, module_version="", upload_module_version = ""):
     """
     Deploy module to the specified host without enabling it.
     If no module_version is provided the latest version is deployed.
     """
-
+    module_input = module_input.split('github.com/')[-1]
     module_array = module_input.split('/')
     if (len(module_array) == 2):
         repo_base, module_name = module_array
     else:
         module_name = module_input
+        repo_base = "ctsit"
 
     file_name = get_latest_release_zip(module_name, repo_base)
-    #file_name = "project_ownership_v1.2.1"
 
     with settings(user=env.deploy_user):
     # Make a temp folder to upload the tar to
