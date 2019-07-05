@@ -60,10 +60,12 @@ def get_release_zip(module_name, repo_base="ctsit", tag="", upload_module_versio
 
 @task
 def deploy_module(module_input, remote_module_version_tag="", upload_module_version = ""):
+
     """
     Deploy module to the specified host without enabling it.
-    If no module_version is provided the latest version is deployed.
+    If no remote_module_version_tag is provided the latest version is deployed.
     """
+
     module_input = module_input.split('github.com/')[-1]
     module_array = module_input.split('/')
     if (len(module_array) == 2):
@@ -73,6 +75,7 @@ def deploy_module(module_input, remote_module_version_tag="", upload_module_vers
         repo_base = "ctsit"
 
     file_name = get_release_zip(module_name, repo_base, remote_module_version_tag, upload_module_version)
+
 
     with settings(user=env.deploy_user):
     # Make a temp folder to upload the tar to
